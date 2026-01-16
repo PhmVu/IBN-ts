@@ -1,0 +1,10 @@
+{
+    "index": {
+        "fields": [
+            "qualityGrade"
+        ]
+    },
+    "ddoc": "indexQualityGrade",
+    "name": "indexQualityGrade",
+    "type": "json"
+}

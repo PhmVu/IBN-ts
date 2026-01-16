@@ -1,0 +1,12 @@
+{
+    "index": {
+        "fields": [
+            "teaType",
+            "qualityGrade",
+            "status"
+        ]
+    },
+    "ddoc": "indexTeaTypeQualityStatus",
+    "name": "indexTeaTypeQualityStatus",
+    "type": "json"
+}

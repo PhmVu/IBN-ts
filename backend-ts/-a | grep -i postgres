@@ -1,0 +1,18 @@
+                             Table "public.permissions"
+   Column    |           Type           | Collation | Nullable |      Default       
+-------------+--------------------------+-----------+----------+--------------------
+ id          | uuid                     |           | not null | uuid_generate_v4()
+ name        | character varying(150)   |           | not null | 
+ resource    | character varying(100)   |           | not null | 
+ action      | character varying(50)    |           | not null | 
+ description | text                     |           |          | 
+ created_at  | timestamp with time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "permissions_pkey" PRIMARY KEY, btree (id)
+    "idx_permissions_action" btree (action)
+    "idx_permissions_resource" btree (resource)
+    "permissions_name_unique" UNIQUE CONSTRAINT, btree (name)
+    "uq_permissions_resource_action" UNIQUE CONSTRAINT, btree (resource, action)
+Referenced by:
+    TABLE "role_permissions" CONSTRAINT "role_permissions_permission_id_foreign" FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
+

@@ -1,0 +1,24 @@
+# Fabric Network
+
+# Generated crypto materials
+organizations/ordererOrganizations/
+organizations/peerOrganizations/
+
+# Generated artifacts
+artifacts/genesis.block
+artifacts/*.tx
+
+# Docker volumes
+!.gitkeep
+
+# System files
+.DS_Store
+*.log
+*.pid
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

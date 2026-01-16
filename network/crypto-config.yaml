@@ -1,0 +1,19 @@
+# Generate crypto materials for Orderer and Peer organizations
+---
+OrdererOrgs:
+  - Name: ictu
+    Domain: ictu.edu.vn
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer
+        CommonName: orderer.ictu.edu.vn
+        # TLS CN: orderer.ictu.edu.vn-cert.pem
+
+PeerOrgs:
+  - Name: ibn
+    Domain: ibn.ictu.edu.vn
+    EnableNodeOUs: true
+    Template:
+      Count: 3  # Number of peers (peer0, peer1, peer2)
+    Users:
+      Count: 1  # Number of non-admin users (User1, User2, etc.)

@@ -1,0 +1,148 @@
+version: '3.8'
+
+networks:
+  fabric-network:
+    driver: bridge
+
+volumes:
+  orderer.ictu.edu.vn:
+  peer0.ibn.ictu.edu.vn:
+  couchdb0:
+
+services:
+  # ==================================
+  # CA: Certificate Authority
+  # ==================================
+  ca.ibn.ictu.edu.vn:
+    container_name: ca.ibn.ictu.edu.vn
+    image: hyperledger/fabric-ca:${CA_VERSION}
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    environment:
+      FABRIC_CA_HOME: /etc/hyperledger/fabric-ca-server
+      FABRIC_CA_SERVER_CA_NAME: ca-ibn
+      FABRIC_CA_SERVER_TLS_ENABLED: 'true'
+      FABRIC_CA_SERVER_PORT: 7054
+    volumes:
+      - ./organizations/peerOrganizations/ibn.ictu.edu.vn/ca/:/etc/hyperledger/fabric-ca-server-config
+    ports:
+      - "${CA_PORT}:7054"
+    networks:
+      - fabric-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7054/cainfo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================================
+  # Orderer: Consensus Service
+  # ==================================
+  orderer.ictu.edu.vn:
+    container_name: orderer.ictu.edu.vn
+    image: hyperledger/fabric-orderer:${FABRIC_VERSION}
+    environment:
+      ORDERER_HOME: /var/hyperledger/orderer
+      ORDERER_HOST: orderer.ictu.edu.vn
+      ORDERER_GENERAL_LISTENADDRESS: 0.0.0.0
+      ORDERER_GENERAL_LISTENPORT: 7050
+      ORDERER_GENERAL_GENESISMETHOD: file
+      ORDERER_GENERAL_GENESISFILE: /var/hyperledger/orderer/orderer.genesis.block
+      ORDERER_GENERAL_LOCALMSPID: OrdererMSP
+      ORDERER_GENERAL_LOCALMSPDIR: /var/hyperledger/orderer/msp
+      ORDERER_GENERAL_TLS_ENABLED: 'true'
+      ORDERER_GENERAL_TLS_PRIVATEKEY: /var/hyperledger/orderer/tls/server.key
+      ORDERER_GENERAL_TLS_CERTIFICATE: /var/hyperledger/orderer/tls/server.crt
+      ORDERER_GENERAL_TLS_ROOTCAS: "[/var/hyperledger/orderer/tls/ca.crt]"
+      ORDERER_METRICS_PROVIDER: prometheus
+      ORDERER_OPERATIONS_LISTENADDRESS: 0.0.0.0:9443
+      ORDERER_OPERATIONS_METRICS_PROVIDER: prometheus
+    volumes:
+      - ./artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ./organizations/ordererOrganizations/ictu.edu.vn/orderers/orderer.ictu.edu.vn/msp:/var/hyperledger/orderer/msp
+      - ./organizations/ordererOrganizations/ictu.edu.vn/orderers/orderer.ictu.edu.vn/tls:/var/hyperledger/orderer/tls
+      - orderer.ictu.edu.vn:/var/hyperledger/production/orderer
+    ports:
+      - "${ORDERER_PORT}:7050"
+      - "9443:9443"
+    networks:
+      - fabric-network
+    depends_on:
+      ca.ibn.ictu.edu.vn:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9443"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================================
+  # CouchDB: State Database for Peer
+  # ==================================
+  couchdb0:
+    container_name: couchdb0
+    image: couchdb:3.2.0
+    environment:
+      COUCHDB_USER: ${COUCHDB_USER}
+      COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
+    volumes:
+      - couchdb0:/opt/couchdb/data
+    ports:
+      - "${COUCHDB_PORT}:5984"
+    networks:
+      - fabric-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://admin:adminpw@localhost:5984/_up"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================================
+  # Peer: Endorsement & Ledger Service
+  # ==================================
+  peer0.ibn.ictu.edu.vn:
+    container_name: peer0.ibn.ictu.edu.vn
+    image: hyperledger/fabric-peer:${FABRIC_VERSION}
+    environment:
+      FABRIC_CFG_PATH: /etc/hyperledger/peercfg
+      CORE_PEER_ID: peer0.ibn.ictu.edu.vn
+      CORE_PEER_ADDRESS: peer0.ibn.ictu.edu.vn:7051
+      CORE_PEER_LISTENADDRESS: 0.0.0.0:7051
+      CORE_PEER_CHAINCODEADDRESS: peer0.ibn.ictu.edu.vn:7052
+      CORE_PEER_CHAINCODELISTENADDRESS: 0.0.0.0:7052
+      CORE_PEER_GOSSIP_EXTERNALENDPOINT: peer0.ibn.ictu.edu.vn:7051
+      CORE_PEER_GOSSIP_BOOTSTRAP: peer0.ibn.ictu.edu.vn:7051
+      CORE_PEER_LOCALMSPID: IBNMSP
+      CORE_PEER_MSPCONFIGPATH: /etc/hyperledger/fabric/msp
+      CORE_VM_ENDPOINT: unix:///host/var/run/docker.sock
+      CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE: fabric-network
+      CORE_LEDGER_STATE_STATEDATABASE: CouchDB
+      CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS: couchdb0:5984
+      CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME: ${COUCHDB_USER}
+      CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD: ${COUCHDB_PASSWORD}
+      CORE_PEER_TLS_ENABLED: 'true'
+      CORE_PEER_TLS_CERT_FILE: /etc/hyperledger/fabric/tls/server.crt
+      CORE_PEER_TLS_KEY_FILE: /etc/hyperledger/fabric/tls/server.key
+      CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/fabric/tls/ca.crt
+      CORE_METRICS_PROVIDER: prometheus
+      CORE_OPERATIONS_LISTENADDRESS: 0.0.0.0:9444
+      CORE_OPERATIONS_METRICS_PROVIDER: prometheus
+      CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG: '{"peername":"peer0ibn"}'
+      CORE_CHAINCODE_EXECUTETIMEOUT: 300s
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./organizations/peerOrganizations/ibn.ictu.edu.vn/peers/peer0.ibn.ictu.edu.vn/msp:/etc/hyperledger/fabric/msp
+      - ./organizations/peerOrganizations/ibn.ictu.edu.vn/peers/peer0.ibn.ictu.edu.vn/tls:/etc/hyperledger/fabric/tls
+      - peer0.ibn.ictu.edu.vn:/var/hyperledger/production
+    ports:
+      - "${PEER_PORT}:7051"
+      - "9444:9444"
+    networks:
+      - fabric-network
+    depends_on:
+      - couchdb0
+      - orderer.ictu.edu.vn
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9444"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

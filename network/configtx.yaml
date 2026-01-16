@@ -1,0 +1,135 @@
+# Configuration for generating genesis block and channel artifacts
+---
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: /workspace/crypto-config/ordererOrganizations/ictu.edu.vn/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+
+  - &PeerOrg
+    Name: IBNMSP
+    ID: IBNMSP
+    MSPDir: /workspace/crypto-config/peerOrganizations/ibn.ictu.edu.vn/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('IBNMSP.admin', 'IBNMSP.peer', 'IBNMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('IBNMSP.admin', 'IBNMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('IBNMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('IBNMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.ibn.ictu.edu.vn
+        Port: 7051
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_0: true
+
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - orderer.ictu.edu.vn:7050
+  EtcdRaft:
+    Consenters:
+      - Host: orderer.ictu.edu.vn
+        Port: 7050
+        ClientTLSCert: crypto-config/ordererOrganizations/ictu.edu.vn/orderers/orderer.ictu.edu.vn/tls/server.crt
+        ServerTLSCert: crypto-config/ordererOrganizations/ictu.edu.vn/orderers/orderer.ictu.edu.vn/tls/server.crt
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 104857600  # 100 MB
+    PreferredMaxBytes: 2097152   # 2 MB
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Profiles:
+  # System channel for ordering service
+  TwoOrgsOrdererGenesis:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+      Capabilities:
+        <<: *OrdererCapabilities
+    Consortiums:
+      SampleConsortium:
+        Organizations:
+          - *PeerOrg
+
+  # Application channel for peers
+  TwoOrgsChannel:
+    <<: *ChannelDefaults
+    Consortium: SampleConsortium
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *PeerOrg
+      Capabilities:
+        <<: *ApplicationCapabilities

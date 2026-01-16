@@ -1,0 +1,124 @@
+# ==============================================================================
+# Hyperledger Fabric 2.5 - Channel Configuration (configtx.yaml)
+# ==============================================================================
+# Based on: https://hyperledger-fabric.readthedocs.io/en/release-2.5/configtx.html
+# ==============================================================================
+
+---
+# Organizations - Định nghĩa các organizations tham gia
+Organizations:
+    - &IBNMSP
+        Name: IBNMSP
+        ID: IBNMSP
+        MSPDir: /crypto/peerOrganizations/ibn.ictu.edu.vn/msp
+        
+        # Policies theo Fabric 2.x standard
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('IBNMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('IBNMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('IBNMSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('IBNMSP.member')"
+
+        # Anchor Peers
+        AnchorPeers:
+            - Host: peer0.ibn.ictu.edu.vn
+              Port: 7051
+
+# Capabilities - Fabric version capabilities
+Capabilities:
+    Channel: &ChannelCapabilities
+        V2_0: true
+    Orderer: &OrdererCapabilities
+        V2_0: true
+    Application: &ApplicationCapabilities
+        V2_5: true
+
+# Application - Channel application configuration
+Application: &ApplicationDefaults
+    Organizations:
+    
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        LifecycleEndorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+        Endorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+
+    Capabilities:
+        <<: *ApplicationCapabilities
+
+# Orderer - Orderer configuration
+Orderer: &OrdererDefaults
+    OrdererType: solo
+    
+    Addresses:
+        - orderer.ictu.edu.vn:7050
+    
+    BatchTimeout: 2s
+    BatchSize:
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
+
+    Organizations:
+    
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+
+# Channel - Channel-specific configuration
+Channel: &ChannelDefaults
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+
+    Capabilities:
+        <<: *ChannelCapabilities
+
+# Profiles - Channel profiles for different purposes
+Profiles:
+    # IBN-main: Governance channel profile
+    IBNMainChannel:
+        Consortium: SampleConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *IBNMSP
+            Capabilities:
+                <<: *ApplicationCapabilities

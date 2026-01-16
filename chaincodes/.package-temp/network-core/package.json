@@ -1,0 +1,29 @@
+{
+    "name": "network-core",
+    "version": "1.0.0",
+    "description": "Network Core Chaincode for IBN",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "fabric-chaincode-node start",
+        "test": "mocha -r ts-node/register test/**/*.test.ts"
+    },
+    "engines": {
+        "node": ">=18"
+    },
+    "dependencies": {
+        "fabric-contract-api": "^2.5.0",
+        "fabric-shim": "^2.5.0"
+    },
+    "devDependencies": {
+        "@types/node": "^18.0.0",
+        "@types/mocha": "^10.0.0",
+        "@types/chai": "^4.3.0",
+        "@types/sinon": "^10.0.0",
+        "typescript": "^5.0.0",
+        "mocha": "^10.0.0",
+        "chai": "^4.3.0",
+        "sinon": "^15.0.0",
+        "ts-node": "^10.9.0"
+    }
+}

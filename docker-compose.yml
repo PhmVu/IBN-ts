@@ -1,0 +1,501 @@
+services:
+  # =====================
+  # HYPERLEDGER FABRIC NETWORK
+  # =====================
+
+  # Fabric CA - Certificate Authority
+  ca.ibn.ictu.edu.vn:
+    image: hyperledger/fabric-ca:latest
+    container_name: ibnts-ca.ibn.ictu.edu.vn
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-ibn
+      - FABRIC_CA_SERVER_PORT=7054
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server/ca-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server/ca-key.pem
+    ports:
+      - "37054:7054"
+    volumes:
+      - ./network/crypto-config:/etc/hyperledger/fabric-ca-server
+    networks:
+      - ibn-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:7054/cainfo" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Orderer
+  orderer.ictu.edu.vn:
+    image: hyperledger/fabric-orderer:2.5
+    container_name: ibnts-orderer.ictu.edu.vn
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+    ports:
+      - "37050:7050"
+    volumes:
+      - ./network/artifacts/genesis.block:/var/hyperledger/orderer/genesis.block
+      - ./network/crypto-config/ordererOrganizations/ictu.edu.vn/orderers/orderer.ictu.edu.vn/msp:/var/hyperledger/orderer/msp
+      - ./network/crypto-config/ordererOrganizations/ictu.edu.vn/orderers/orderer.ictu.edu.vn/tls:/var/hyperledger/orderer/tls
+      - orderer-storage:/var/hyperledger/production/orderer
+    networks:
+      - ibn-network
+    depends_on:
+      - ca.ibn.ictu.edu.vn
+
+  # Peer
+  peer0.ibn.ictu.edu.vn:
+    image: hyperledger/fabric-peer:2.5
+    container_name: ibnts-peer0.ibn.ictu.edu.vn
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=ibnwithtypescript_ibn-network
+      - CORE_PEER_ID=peer0.ibn.ictu.edu.vn
+      - CORE_PEER_ADDRESS=peer0.ibn.ictu.edu.vn:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.ibn.ictu.edu.vn:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.ibn.ictu.edu.vn:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.ibn.ictu.edu.vn:7051
+      - CORE_PEER_LOCALMSPID=IBNMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:2.5
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:2.5
+      - CORE_CHAINCODE_NODE_RUNTIME=hyperledger/fabric-nodeenv:2.5
+      - CORE_CHAINCODE_INSTALLTIMEOUT=600s
+      - CORE_CHAINCODE_STARTUPTIMEOUT=600s
+      - CORE_CHAINCODE_EXECUTETIMEOUT=60s
+    ports:
+      - "37051:7051"
+      - "37052:7052"
+      - "37053:7053"
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./network/crypto-config:/crypto
+      - ./network/artifacts:/artifacts
+      - ./network/packages:/packages
+      - ./chaincodes:/chaincodes
+      - ./network/crypto-config/peerOrganizations/ibn.ictu.edu.vn/peers/peer0.ibn.ictu.edu.vn/msp:/etc/hyperledger/fabric/msp
+      - ./network/crypto-config/peerOrganizations/ibn.ictu.edu.vn/peers/peer0.ibn.ictu.edu.vn/tls:/etc/hyperledger/fabric/tls
+      - peer0-storage:/var/hyperledger/production
+    networks:
+      - ibn-network
+    depends_on:
+      - orderer.ictu.edu.vn
+      - couchdb
+    healthcheck:
+      test: [ "CMD", "peer", "version" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # CouchDB - State Database for Peer0
+  couchdb:
+    image: couchdb:3.3.2
+    container_name: ibnts-couchdb0
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=adminpw
+    ports:
+      - "37984:5984"
+    volumes:
+      - couchdb0-storage:/opt/couchdb/data
+    networks:
+      - ibn-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5984" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # CouchDB for Peer1
+  couchdb1:
+    image: couchdb:3.3.2
+    container_name: ibnts-couchdb1
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=adminpw
+    ports:
+      - "37985:5984"
+    volumes:
+      - couchdb1-storage:/opt/couchdb/data
+    networks:
+      - ibn-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5984" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # CouchDB for Peer2
+  couchdb2:
+    image: couchdb:3.3.2
+    container_name: ibnts-couchdb2
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=adminpw
+    ports:
+      - "37986:5984"
+    volumes:
+      - couchdb2-storage:/opt/couchdb/data
+    networks:
+      - ibn-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5984" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Peer1
+  peer1.ibn.ictu.edu.vn:
+    image: hyperledger/fabric-peer:2.5
+    container_name: ibnts-peer1.ibn.ictu.edu.vn
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=ibnwithtypescript_ibn-network
+      - CORE_PEER_ID=peer1.ibn.ictu.edu.vn
+      - CORE_PEER_ADDRESS=peer1.ibn.ictu.edu.vn:8051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.ibn.ictu.edu.vn:8052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.ibn.ictu.edu.vn:8051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.ibn.ictu.edu.vn:7051
+      - CORE_PEER_LOCALMSPID=IBNMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb1:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:2.5
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:2.5
+      - CORE_CHAINCODE_NODE_RUNTIME=hyperledger/fabric-nodeenv:2.5
+    ports:
+      - "38051:8051"
+      - "38052:8052"
+      - "38053:8053"
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./network/crypto-config:/crypto
+      - ./network/artifacts:/artifacts
+      - ./network/packages:/packages
+      - ./chaincodes:/chaincodes
+      - ./network/crypto-config/peerOrganizations/ibn.ictu.edu.vn/peers/peer1.ibn.ictu.edu.vn/msp:/etc/hyperledger/fabric/msp
+      - ./network/crypto-config/peerOrganizations/ibn.ictu.edu.vn/peers/peer1.ibn.ictu.edu.vn/tls:/etc/hyperledger/fabric/tls
+      - peer1-storage:/var/hyperledger/production
+    networks:
+      - ibn-network
+    depends_on:
+      - orderer.ictu.edu.vn
+      - couchdb1
+    healthcheck:
+      test: [ "CMD", "peer", "version" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Peer2
+  peer2.ibn.ictu.edu.vn:
+    image: hyperledger/fabric-peer:2.5
+    container_name: ibnts-peer2.ibn.ictu.edu.vn
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=ibnwithtypescript_ibn-network
+      - CORE_PEER_ID=peer2.ibn.ictu.edu.vn
+      - CORE_PEER_ADDRESS=peer2.ibn.ictu.edu.vn:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer2.ibn.ictu.edu.vn:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2.ibn.ictu.edu.vn:9051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.ibn.ictu.edu.vn:7051
+      - CORE_PEER_LOCALMSPID=IBNMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb2:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:2.5
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:2.5
+      - CORE_CHAINCODE_NODE_RUNTIME=hyperledger/fabric-nodeenv:2.5
+    ports:
+      - "39051:9051"
+      - "39052:9052"
+      - "39053:9053"
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./network/crypto-config:/crypto
+      - ./network/artifacts:/artifacts
+      - ./network/packages:/packages
+      - ./chaincodes:/chaincodes
+      - ./network/crypto-config/peerOrganizations/ibn.ictu.edu.vn/peers/peer2.ibn.ictu.edu.vn/msp:/etc/hyperledger/fabric/msp
+      - ./network/crypto-config/peerOrganizations/ibn.ictu.edu.vn/peers/peer2.ibn.ictu.edu.vn/tls:/etc/hyperledger/fabric/tls
+      - peer2-storage:/var/hyperledger/production
+    networks:
+      - ibn-network
+    depends_on:
+      - orderer.ictu.edu.vn
+      - couchdb2
+    healthcheck:
+      test: [ "CMD", "peer", "version" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =====================
+  # POSTGRESQL DATABASE
+  # =====================
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: ibnts-postgres
+    environment:
+      - POSTGRES_USER=ibn_user
+      - POSTGRES_PASSWORD=ibn_password
+      - POSTGRES_DB=ibn_db
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8
+    ports:
+      - "37432:5432"
+    volumes:
+      - postgres-storage:/var/lib/postgresql/data
+    networks:
+      - ibn-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ibn_user -d ibn_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =====================
+  # REDIS CACHE
+  # =====================
+
+  redis:
+    image: redis:7-alpine
+    container_name: ibnts-redis
+    command: redis-server --appendonly yes
+    ports:
+      - "37379:6379"
+    volumes:
+      - redis-storage:/data
+    networks:
+      - ibn-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =====================
+  # GATEWAY API SERVICE
+  # =====================
+
+  gateway-api:
+    build:
+      context: ./gateway-ts
+      dockerfile: Dockerfile
+    container_name: ibnts-gateway-api
+    environment:
+      - NODE_ENV=production
+      - PORT=9001
+      - LOG_LEVEL=info
+      - PEER_ADDRESS=peer0.ibn.ictu.edu.vn:7051
+      - PEER_TLS_ENABLED=true
+      - FABRIC_CA_URL=http://ca.ibn.ictu.edu.vn:7054
+      - ORDERER_URL=orderer.ibn.ictu.edu.vn:7050
+    ports:
+      - "37001:9001"
+    volumes:
+      - ./network/crypto-config:/app/crypto-config
+    networks:
+      - ibn-network
+    # Start independently (Fabric services can be started separately when needed)
+    depends_on: []
+    healthcheck:
+      test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:9001/api/v1/health',r=>{if(r.statusCode!==200)process.exit(1);else process.exit(0);}).on('error',()=>process.exit(1));\"" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # =====================
+  # BACKEND API SERVICE
+  # =====================
+
+  backend-api:
+    build:
+      context: ./backend-ts
+      dockerfile: Dockerfile
+    container_name: ibnts-backend-api
+    environment:
+      - NODE_ENV=production
+      - PORT=9002
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=ibn_user
+      - DB_PASSWORD=ibn_password
+      - DB_NAME=ibn_db
+      - DB_POOL_MIN=2
+      - DB_POOL_MAX=10
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-min-32-characters-here-prod}
+      - JWT_EXPIRATION=24h
+      - JWT_REFRESH_EXPIRATION=7d
+      - GATEWAY_API_URL=http://gateway-api:9001
+      - GATEWAY_API_TIMEOUT=30000
+      - CORS_ORIGIN=http://localhost:3001,http://localhost:3000
+      - AUDIT_LOG_ENABLED=true
+      - SWAGGER_ENABLED=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+      - WALLET_ENCRYPTION_KEY=ffa8f37c3a2c23d4b1fc238b7bbe9d6d7f6c073f4b7de9da6d24e0c5ef90f00a
+    ports:
+      - "37002:9002"
+    volumes:
+      - ./backend-ts/src:/app/src:ro # Source code (read-only)
+      - ./backend-ts/tsconfig.json:/app/tsconfig.json:ro
+      - ./network/crypto-config:/app/network/crypto-config
+    networks:
+      - ibn-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # =====================
+  # FRONTEND SERVICE
+  # =====================
+
+  # =====================
+  # HASHICORP VAULT - Key Management
+  # =====================
+
+  vault:
+    image: hashicorp/vault:1.15
+    container_name: ibnts-vault
+    ports:
+      - "38200:8200"
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - ./vault-config/vault-prod.hcl:/vault/config/vault.hcl:ro
+      - vault-data:/vault/file
+    environment:
+      - VAULT_ADDR=http://0.0.0.0:8200
+    command: server
+    networks:
+      - ibn-network
+    healthcheck:
+      test: [ "CMD", "vault", "status" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # =====================
+  # NETWORK-CORE CHAINCODE (CCAAS)
+  # =====================
+
+  network-core-ccaas:
+    image: network-core-ccaas:0.0.4
+    container_name: ibnts-network-core-ccaas
+    networks:
+      - ibn-network
+    environment:
+      - CHAINCODE_SERVER_ADDRESS=0.0.0.0:9999
+      - CHAINCODE_CCID=network-core_0.0.4:ebfe213fef82c587379ff757d8417cf3f8ec9715150b5351c6f665cfa08c80d1
+      - CORE_CHAINCODE_LOGGING_LEVEL=info
+    ports:
+      - "39999:9999"
+    restart: unless-stopped
+
+  # =====================
+  # FRONTEND
+  # =====================
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ibnts-frontend
+    environment:
+      - VITE_API_URL=http://localhost:37080
+      - VITE_GATEWAY_URL=http://localhost:37080
+    ports:
+      - "37003:3001"
+    networks:
+      - ibn-network
+    depends_on:
+      backend-api:
+        condition: service_healthy
+
+  # =====================
+  # NGINX REVERSE PROXY
+  # =====================
+
+  nginx:
+    image: nginx:alpine
+    container_name: ibnts-nginx
+    ports:
+      - "37080:80"
+      - "37443:443"
+    volumes:
+      - ./network/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./network/certs:/etc/nginx/certs:ro
+    networks:
+      - ibn-network
+    depends_on:
+      - frontend
+      - backend-api
+      - gateway-api
+
+networks:
+  ibn-network:
+    driver: bridge
+
+volumes:
+  orderer-storage:
+  peer0-storage:
+  peer1-storage:
+  peer2-storage:
+  couchdb0-storage:
+  couchdb1-storage:
+  couchdb2-storage:
+  postgres-storage:
+  redis-storage:
+  vault-data:
+
+    # Update CHAINCODE_CCID for network-core-ccaas

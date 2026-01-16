@@ -1,0 +1,108 @@
+2026-01-13 07:05:39 [[32minfo[39m]: GatewayClient initialized with URL: http://gateway-api:9001
+2026-01-13 07:05:40 [[32minfo[39m]: Running database migrations...
+2026-01-13 07:05:40 [[32minfo[39m]: Redis connected successfully
+2026-01-13 07:05:40 [[32minfo[39m]: Redis ready to accept commands
+2026-01-13 07:05:40 [[32minfo[39m]: Database migrations completed
+[seed-runner] start
+2026-01-13 07:05:40 [[32minfo[39m]: 🌱 Starting database seeding...
+2026-01-13 07:05:40 [[32minfo[39m]: ✓ Database connection successful
+2026-01-13 07:05:40 [[32minfo[39m]: 🌱 Executing 5 seed files...
+2026-01-13 07:05:40 [[32minfo[39m]: Files: 001_seed_roles.ts, 002_seed_permissions.ts, 003_organizations.ts, 003_seed_role_permissions.ts, 004_seed_superadmin.ts
+[seed-runner] loading 001_seed_roles.ts
+[seed-runner] loaded 001_seed_roles.ts
+2026-01-13 07:05:40 [[32minfo[39m]: → Running seed: 001_seed_roles.ts
+✓ Seeded 4 default roles
+2026-01-13 07:05:40 [[32minfo[39m]: ✓ Completed seed: 001_seed_roles.ts
+[seed-runner] loading 002_seed_permissions.ts
+[seed-runner] loaded 002_seed_permissions.ts
+2026-01-13 07:05:40 [[32minfo[39m]: → Running seed: 002_seed_permissions.ts
+✓ Seeded 54 default permissions
+2026-01-13 07:05:40 [[32minfo[39m]: ✓ Completed seed: 002_seed_permissions.ts
+[seed-runner] loading 003_organizations.ts
+[seed-runner] loaded 003_organizations.ts
+2026-01-13 07:05:40 [[32minfo[39m]: → Running seed: 003_organizations.ts
+[seed-orgs] start
+Organizations already exist; skipping seed.
+2026-01-13 07:05:40 [[32minfo[39m]: ✓ Completed seed: 003_organizations.ts
+[seed-runner] loading 003_seed_role_permissions.ts
+[seed-runner] loaded 003_seed_role_permissions.ts
+2026-01-13 07:05:40 [[32minfo[39m]: → Running seed: 003_seed_role_permissions.ts
+✓ Mapped permissions to roles:
+  - SuperAdmin: 54 permissions (ALL)
+  - OrgAdmin: 38 permissions
+  - User: 12 permissions
+  - Auditor: 18 permissions
+2026-01-13 07:05:40 [[32minfo[39m]: ✓ Completed seed: 003_seed_role_permissions.ts
+[seed-runner] loading 004_seed_superadmin.ts
+[seed-runner] loaded 004_seed_superadmin.ts
+2026-01-13 07:05:40 [[32minfo[39m]: → Running seed: 004_seed_superadmin.ts
+SuperAdmin user already exists; updating role/org linkage.
+Linked SuperAdmin to org IBN
+Assigned SuperAdmin role to user in user_roles table
+2026-01-13 07:05:41 [[32minfo[39m]: ✓ Completed seed: 004_seed_superadmin.ts
+2026-01-13 07:05:41 [[32minfo[39m]: ✅ All seeds completed successfully
+2026-01-13 07:05:41 [[32minfo[39m]: Database seeding completed
+2026-01-13 07:05:41 [[32minfo[39m]: Checking for certificates without expiry dates...
+2026-01-13 07:05:41 [[32minfo[39m]: All certificates already have expiry dates
+2026-01-13 07:05:41 [[32minfo[39m]: Loading JWT keys from files...
+2026-01-13 07:05:41 [[32minfo[39m]: JWT service initialized with file-based keys
+2026-01-13 07:05:41 [[32minfo[39m]: JWT service initialized
+2026-01-13 07:05:41 [[32minfo[39m]: CertificateService initialized
+2026-01-13 07:05:41 [[32minfo[39m]: CertificateService initialized
+2026-01-13 07:05:41 [[32minfo[39m]: Testing database connection...
+2026-01-13 07:05:41 [[32minfo[39m]: Database pool created: postgres:5432/ibn_db
+Tue Jan 13 2026 07:05:41 GMT+0000 (Coordinated Universal Time) [[32minfo[39m]: Database connection successful
+2026-01-13 07:05:41 [[32minfo[39m]: Express app configured successfully
+2026-01-13 07:05:41 [[32minfo[39m]: Backend API running on http://0.0.0.0:9002
+2026-01-13 07:05:41 [[32minfo[39m]: Environment: production
+2026-01-13 07:05:41 [[32minfo[39m]: API documentation: Swagger coming soon
+2026-01-13 07:05:41 [[32minfo[39m]: WalletService initialized
+2026-01-13 07:05:41 [[32minfo[39m]: ✅ Certificate monitoring cron job started (daily at 00:00 UTC)
+ValidationError: The Express 'trust proxy' setting is true, which allows anyone to trivially bypass IP-based rate limiting. See https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/ for more information.
+    at Object.trustProxy (/app/node_modules/express-rate-limit/dist/index.cjs:348:13)
+    at Object.wrappedValidations.<computed> [as trustProxy] (/app/node_modules/express-rate-limit/dist/index.cjs:680:22)
+    at Object.keyGenerator (/app/node_modules/express-rate-limit/dist/index.cjs:782:20)
+    at /app/node_modules/express-rate-limit/dist/index.cjs:844:32
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /app/node_modules/express-rate-limit/dist/index.cjs:825:5 {
+  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
+  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
+}
+2026-01-13T07:05:42.805Z [[32minfo[39m]: GET /
+2026-01-13T07:06:12.861Z [[32minfo[39m]: GET /
+2026-01-13T07:06:42.927Z [[32minfo[39m]: GET /
+2026-01-13T07:07:13.015Z [[32minfo[39m]: GET /
+2026-01-13T07:07:43.082Z [[32minfo[39m]: GET /
+2026-01-13T07:08:13.156Z [[32minfo[39m]: GET /
+2026-01-13T07:08:43.223Z [[32minfo[39m]: GET /
+2026-01-13T07:09:13.318Z [[32minfo[39m]: GET /
+2026-01-13T07:09:43.388Z [[32minfo[39m]: GET /
+2026-01-13T07:10:13.480Z [[32minfo[39m]: GET /
+2026-01-13T07:10:43.548Z [[32minfo[39m]: GET /
+2026-01-13T07:11:13.611Z [[32minfo[39m]: GET /
+2026-01-13T07:11:43.669Z [[32minfo[39m]: GET /
+2026-01-13T07:12:13.736Z [[32minfo[39m]: GET /
+2026-01-13T07:12:43.798Z [[32minfo[39m]: GET /
+2026-01-13T07:13:13.860Z [[32minfo[39m]: GET /
+2026-01-13T07:13:43.934Z [[32minfo[39m]: GET /
+2026-01-13T07:14:14.017Z [[32minfo[39m]: GET /
+2026-01-13T07:14:44.089Z [[32minfo[39m]: GET /
+2026-01-13T07:15:14.148Z [[32minfo[39m]: GET /
+2026-01-13T07:15:44.214Z [[32minfo[39m]: GET /
+2026-01-13T07:16:14.330Z [[32minfo[39m]: GET /
+2026-01-13T07:16:44.392Z [[32minfo[39m]: GET /
+2026-01-13T07:17:14.452Z [[32minfo[39m]: GET /
+2026-01-13T07:17:44.519Z [[32minfo[39m]: GET /
+2026-01-13T07:18:14.584Z [[32minfo[39m]: GET /
+2026-01-13T07:18:44.634Z [[32minfo[39m]: GET /
+2026-01-13T07:19:14.710Z [[32minfo[39m]: GET /
+2026-01-13T07:19:44.757Z [[32minfo[39m]: GET /
+2026-01-13T07:20:14.816Z [[32minfo[39m]: GET /
+2026-01-13T07:20:44.876Z [[32minfo[39m]: GET /
+2026-01-13T07:21:14.929Z [[32minfo[39m]: GET /
+2026-01-13T07:21:45.001Z [[32minfo[39m]: GET /
+2026-01-13T07:22:15.081Z [[32minfo[39m]: GET /
+2026-01-13T07:22:45.133Z [[32minfo[39m]: GET /
+2026-01-13T07:23:15.193Z [[32minfo[39m]: GET /
+2026-01-13T07:23:45.315Z [[32minfo[39m]: GET /
+2026-01-13T07:24:15.384Z [[32minfo[39m]: GET /

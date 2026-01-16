@@ -1,0 +1,8 @@
+{
+  "watch": ["src"],
+  "ext": "ts",
+  "ignore": ["src/**/*.test.ts"],
+  "exec": "ts-node-dev --respawn --transpile-only",
+  "script": "src/index.ts",
+  "delay": 2500
+}

@@ -1,0 +1,30 @@
+{
+    "name": "network-core",
+    "version": "1.0.0",
+    "description": "Network Core Chaincode for IBN",
+    "main": "dist/ccaas.js",
+    "scripts": {
+        "build": "tsc && cp src/ccaas.js dist/",
+        "start": "fabric-chaincode-node server --chaincode-address=$CHAINCODE_SERVER_ADDRESS --chaincode-id=$CHAINCODE_CCID",
+        "start:dev": "fabric-chaincode-node server --chaincode-address=0.0.0.0:9999 --chaincode-id=network-core_0.0.4:latest",
+        "test": "mocha -r ts-node/register test/**/*.test.ts"
+    },
+    "engines": {
+        "node": ">=18"
+    },
+    "dependencies": {
+        "fabric-contract-api": "^2.5.0",
+        "fabric-shim": "^2.5.0"
+    },
+    "devDependencies": {
+        "@types/node": "^18.0.0",
+        "@types/mocha": "^10.0.0",
+        "@types/chai": "^4.3.0",
+        "@types/sinon": "^10.0.0",
+        "typescript": "^5.0.0",
+        "mocha": "^10.0.0",
+        "chai": "^4.3.0",
+        "sinon": "^15.0.0",
+        "ts-node": "^10.9.0"
+    }
+}

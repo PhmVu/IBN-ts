@@ -1,0 +1,80 @@
+# Vault Production Keys - NEVER COMMIT!
+vault-keys.json
+kek-backup.json
+*.backup
+# Vault Backups (store separately)
+backups/vault/*.tar.gz
+# Environment files with secrets - ALL VARIANTS
+.env
+.env.*
+*.env
+.env.local
+.env.development
+.env.production
+# Fabric Crypto Materials - CRITICAL SECURITY
+crypto/
+organizations/
+wallet/
+**/wallet/
+**/crypto/
+**/organizations/
+channel-artifacts/
+**/msp/
+**/tlscacerts/
+**/cacerts/
+**/keystore/
+**/signcerts/
+# Node modules - ALL
+node_modules/
+*/node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+# Build outputs
+dist/
+build/
+*/dist/
+*/build/
+**/dist/
+**/build/
+*.tgz
+# Docker volumes data - Large files
+data/
+volumes/
+var/
+**/data/
+**/volumes/
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+# IDE
+.vscode/
+.idea/
+*.iml
+# Logs
+logs/
+*.log
+**/logs/
+# Coverage
+coverage/
+.nyc_output/
+# Temporary files
+tmp/
+temp/
+*.tmp
+# Docker
+.dockerignore
+# Test artifacts
+test-results/
+playwright-report/
+# Brain artifacts (keep local)
+.gemini/

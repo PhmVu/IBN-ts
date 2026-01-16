@@ -1,0 +1,23 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install ALL dependencies (need fabric-chaincode-node CLI)
+RUN npm ci
+
+# Copy compiled chaincode
+COPY dist ./dist
+
+# Expose chaincode server port
+EXPOSE 9999
+
+# Set environment variables for CCAAS
+ENV CHAINCODE_SERVER_ADDRESS=0.0.0.0:9999
+ENV CHAINCODE_CCID=network-core_0.0.4:latest
+ENV CORE_CHAINCODE_LOGGING_LEVEL=info
+
+# Use shell form so env vars expand
+CMD npm start

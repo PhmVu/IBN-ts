@@ -1,0 +1,10 @@
+{
+    "index": {
+        "fields": [
+            "teaType"
+        ]
+    },
+    "ddoc": "indexTeaType",
+    "name": "indexTeaType",
+    "type": "json"
+}

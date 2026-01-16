@@ -1,0 +1,31 @@
+import Redis from 'ioredis';
+import logger from '../core/logger';
+
+const redis = new Redis({
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379'),
+    password: process.env.REDIS_PASSWORD,
+    db: 0,
+    retryStrategy: (times) => {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+    }
+});
+
+redis.on('connect', () => {
+    logger.info('Redis connected successfully');
+});
+
+redis.on('error', (error: any) => {
+    logger.error('Redis connection error', {
+        error: error.message,
+        code: error.code,
+        stack: error.stack
+    });
+});
+
+redis.on('ready', () => {
+    logger.info('Redis ready to accept commands');
+});
+
+export default redis;

@@ -1,0 +1,21 @@
+{
+    "name": "crypto-assets",
+    "version": "1.0.0",
+    "description": "Crypto Assets Chaincode for IBN",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "fabric-chaincode-node start"
+    },
+    "engines": {
+        "node": ">=18"
+    },
+    "dependencies": {
+        "fabric-contract-api": "^2.5.0",
+        "fabric-shim": "^2.5.0"
+    },
+    "devDependencies": {
+        "@types/node": "^18.0.0",
+        "typescript": "^5.0.0"
+    }
+}
